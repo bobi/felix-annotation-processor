@@ -1,9 +1,4 @@
-test-projects
-tmp
-out
-felix-annotation-processor.zip
-.idea/workspace.xml
-libs/**
+.idea/
+build/
 .gradle
-fa-tmp
 
