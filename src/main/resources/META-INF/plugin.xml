@@ -214,10 +214,6 @@
 
         <psi.referenceContributor language="JAVA"
                                   implementation="net.chilicat.felixscr.intellij.references.ScrReferenceProvidersRegistry"/>
-
-
-        <compileServer.plugin classpath="felix-jps-plugin.jar;felix-scr-common.jar"/>
-
     </extensions>
 
 </idea-plugin>
