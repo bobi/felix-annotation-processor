@@ -27,7 +27,7 @@ The plugin currently does support only Felix Annotations 1.9.4.
 The plugin doesn't support JavaDoc parsing.
 
 # Build Setup
-This Requires is Intellij 12. Please execute "gradlew copyLibs" on the command line to prepare needed libraries.
+This Requires is Intellij 14. Please execute "gradlew build" on the command line to build the project.
 
 # Thanks To
 Thanks to [arikkfir](https://github.com/arikkfir) for sharing his project [Apache-Felix-IntelliJ-Plugin](https://github.com/arikkfir/Apache-Felix-IntelliJ-Plugin)
