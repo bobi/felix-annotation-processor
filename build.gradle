@@ -1,35 +1,58 @@
-repositories {
-    mavenLocal()
-    mavenCentral()
+plugins {
+    id "org.jetbrains.intellij" version "0.1.10"
 }
 
-configurations {
-    // Needed for the src generator ant task.
-    scrAntLib
+group pluginGroup
+version = pluginVersion
+
+repositories {
+    mavenCentral()
+    maven { url 'http://dl.bintray.com/jetbrains/intellij-plugin-service' }
+}
+
+intellij {
+    version ideaVersion
+    type ideaType
+    pluginName pluginName
+    downloadSources Boolean.valueOf(sources)
+    sameSinceUntilBuild Boolean.valueOf(isEAP)
+    alternativeIdePath idePath
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaTargetVersion
+}
+
+apply plugin: 'org.jetbrains.intellij'
+apply plugin: 'java'
+apply plugin: 'idea'
+
+idea {
+    project {
+        jdkName = javaVersion
+        languageLevel = javaVersion
+    }
+
+    module {
+        iml {
+            withXml {
+                it.node.@type = 'PLUGIN_MODULE'
+                def cmp = it.node.appendNode('component')
+                cmp.@name = 'DevKit.ModuleBuildProperties'
+                cmp.@url = 'file://$MODULE_DIR$/src/main/resources/META-INF/plugin.xml'
+            }
+        }
+    }
 }
 
 dependencies {
-    //scrAntLib group: "org.apache.felix", name: "org.apache.felix.scr.generator", version: "1.8.1-SNAPSHOT", changing: true
-    scrAntLib 'org.apache.felix:org.apache.felix.scr.generator:1.8.2'
-    scrAntLib 'org.osgi:org.osgi.compendium:4.3.1'
-
-    //compile project('felix-scr-common')
+    compile 'org.apache.felix:org.apache.felix.scr.generator:1.14.0'
+    compile 'org.osgi:org.osgi.compendium:4.3.1'
 }
-
-task clean(type: Delete) {
-    delete file('libs')
-}
-
-task copyLibs(type: Sync) {
-
-    def pattern = /(.*)-\w+.*\.jar/
-
-    from configurations.scrAntLib
-    into file("libs")
-    rename pattern, '$1.jar'
-}
-
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.7'
+    gradleVersion = '2.14.1'
 }

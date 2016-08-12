@@ -1,3 +1,1 @@
-//include 'felix-scr-common'
-//include 'jps-plugin'
-
+rootProject.name = 'felix-annotation-processor'

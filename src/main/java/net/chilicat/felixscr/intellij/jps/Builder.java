@@ -2,16 +2,13 @@ package net.chilicat.felixscr.intellij.jps;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.ModuleChunk;
-import org.jetbrains.jps.builders.BuildTarget;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.builders.java.JavaSourceRootDescriptor;
 import org.jetbrains.jps.incremental.*;
 import org.jetbrains.jps.incremental.messages.ProgressMessage;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class Builder extends BuilderService {
