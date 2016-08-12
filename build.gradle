@@ -15,6 +15,7 @@ intellij {
     type ideaType
     pluginName pluginName
     downloadSources Boolean.valueOf(sources)
+    updateSinceUntilBuild false
     sameSinceUntilBuild Boolean.valueOf(isEAP)
     alternativeIdePath idePath
 }
