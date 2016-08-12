@@ -4,7 +4,7 @@
 
     <idea-version since-build="141.713"/>
 
-    <version>1.6</version>
+    <version>1.7</version>
 
     <name>Felix SCR Annotation Processor</name>
     <description>
@@ -214,6 +214,8 @@
 
         <psi.referenceContributor language="JAVA"
                                   implementation="net.chilicat.felixscr.intellij.references.ScrReferenceProvidersRegistry"/>
+
+        <compileServer.plugin classpath="felix-jps-plugin.jar;felix-scr-common.jar;org.osgi.core-4.2.0.jar;org.osgi.compendium-4.3.1.jar;org.apache.felix.scr.generator-1.14.0.jar;asm-all-5.1.jar"/>
     </extensions>
 
 </idea-plugin>

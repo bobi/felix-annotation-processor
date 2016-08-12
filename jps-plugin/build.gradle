@@ -1,0 +1,6 @@
+
+jar.archiveName = 'felix-jps-plugin.jar'
+
+dependencies {
+    compile project(':felix-scr-common')
+}

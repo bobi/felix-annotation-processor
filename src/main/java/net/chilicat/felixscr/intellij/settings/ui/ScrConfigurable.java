@@ -4,6 +4,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import net.chilicat.felixscr.intellij.settings.ScrSettings;
 import net.chilicat.felixscr.intellij.settings.ScrSettingsImpl;
 import net.chilicat.felixscr.intellij.settings.SettingsPage;
 import org.jetbrains.annotations.Nls;

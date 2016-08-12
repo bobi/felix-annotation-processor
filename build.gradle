@@ -2,56 +2,39 @@ plugins {
     id "org.jetbrains.intellij" version "0.1.10"
 }
 
-group pluginGroup
-version = pluginVersion
 
-repositories {
-    mavenCentral()
-    maven { url 'http://dl.bintray.com/jetbrains/intellij-plugin-service' }
-}
-
-intellij {
-    version ideaVersion
-    type ideaType
-    pluginName pluginName
-    downloadSources Boolean.valueOf(sources)
-    updateSinceUntilBuild false
-    sameSinceUntilBuild Boolean.valueOf(isEAP)
-    alternativeIdePath idePath
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaTargetVersion
-}
-
-apply plugin: 'org.jetbrains.intellij'
-apply plugin: 'java'
-apply plugin: 'idea'
-
-idea {
-    project {
-        jdkName = javaVersion
-        languageLevel = javaVersion
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url 'http://dl.bintray.com/jetbrains/intellij-plugin-service' }
     }
 
-    module {
-        iml {
-            withXml {
-                it.node.@type = 'PLUGIN_MODULE'
-                def cmp = it.node.appendNode('component')
-                cmp.@name = 'DevKit.ModuleBuildProperties'
-                cmp.@url = 'file://$MODULE_DIR$/src/main/resources/META-INF/plugin.xml'
-            }
-        }
+    apply plugin: 'org.jetbrains.intellij'
+    apply plugin: 'java'
+
+    group pluginGroup
+    version = pluginVersion
+
+    intellij {
+        version ideaVersion
+        type ideaType
+        downloadSources Boolean.valueOf(sources)
+        updateSinceUntilBuild false
+        sameSinceUntilBuild Boolean.valueOf(isEAP)
+        alternativeIdePath idePath
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaTargetVersion
     }
 }
 
 dependencies {
-    compile 'org.apache.felix:org.apache.felix.scr.generator:1.14.0'
-    compile 'org.osgi:org.osgi.compendium:4.3.1'
+    compile project(':felix-scr-common')
+    compile project(':jps-plugin')
 }
 
 task wrapper(type: Wrapper) {

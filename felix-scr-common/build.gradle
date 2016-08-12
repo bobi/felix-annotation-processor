@@ -1,0 +1,6 @@
+jar.archiveName = 'felix-scr-common.jar'
+
+dependencies {
+    compile 'org.apache.felix:org.apache.felix.scr.generator:1.14.0'
+    compile 'org.osgi:org.osgi.compendium:4.3.1'
+}
