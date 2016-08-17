@@ -119,7 +119,7 @@ public class Settings extends JpsElementBase<Settings> implements ScrSettings {
         public boolean scanClasses = false;
         public ManifestPolicy manifestPolicy = ManifestPolicy.overwrite;
         public boolean debugLogging = false;
-        private String spec = "1.1";
+        public String spec = "1.1";
         public boolean incremental = false;
     }
 }

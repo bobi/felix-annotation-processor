@@ -24,6 +24,8 @@ allprojects {
         alternativeIdePath idePath
     }
 
+    intellij.systemProperties = ['compiler.process.debug.port' : '54795']
+
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
 
