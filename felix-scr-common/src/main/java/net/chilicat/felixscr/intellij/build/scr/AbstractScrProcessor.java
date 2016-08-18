@@ -1,12 +1,5 @@
 package net.chilicat.felixscr.intellij.build.scr;
 
-import com.intellij.util.PathUtil;
-import net.chilicat.felixscr.intellij.settings.ScrSettings;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.felix.scrplugin.*;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Component;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,6 +9,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.Manifest;
+
+import com.intellij.util.PathUtil;
+import net.chilicat.felixscr.intellij.settings.ScrSettings;
+import org.apache.felix.scrplugin.*;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Component;
 
 public abstract class AbstractScrProcessor {
 
@@ -70,9 +69,6 @@ public abstract class AbstractScrProcessor {
             project.setClassesDirectory(classDir.getAbsolutePath());
             project.setSources(getSources());
             project.setDependencies(toFileCollection(classPath));
-
-            logger.info(ToStringBuilder.reflectionToString(project));
-            logger.info(ToStringBuilder.reflectionToString(opt));
 
             SCRDescriptorGenerator gen = new SCRDescriptorGenerator(logger);
             gen.setOptions(opt);
