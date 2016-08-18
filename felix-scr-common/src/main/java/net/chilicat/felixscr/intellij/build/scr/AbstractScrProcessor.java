@@ -245,9 +245,7 @@ public abstract class AbstractScrProcessor {
             urls[i] = new File(list.get(i)).toURI().toURL();
         }
 
-        logger.debug("Classpath files: " + Arrays.toString(urls));
-
-        return new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
+        return new URLClassLoader(urls, this.getClass().getClassLoader());
     }
 
     protected abstract void collectClasspath(Collection<String> classPath);
