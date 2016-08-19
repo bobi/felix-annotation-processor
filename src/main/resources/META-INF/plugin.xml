@@ -50,6 +50,7 @@
                 <strong>Version 1.7</strong>
                 <ul>
                      <li>Upgraded SCR generator to stable version 1.14.0 with Java 8 support.</li>
+                     <li>Fixed compatibility with Idea 2016.2</li>
                 </ul>
             </p>
             <p>
