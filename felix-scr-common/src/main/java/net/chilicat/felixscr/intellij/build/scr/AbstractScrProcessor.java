@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.Manifest;
 
@@ -65,7 +64,9 @@ public abstract class AbstractScrProcessor {
 
             Project project = new Project();
 
-            project.setClassLoader(createClassLoader(classPath));
+            final ClassLoader classLoader = createClassLoader(classPath);
+
+            project.setClassLoader(classLoader);
             project.setClassesDirectory(classDir.getAbsolutePath());
             project.setSources(getSources());
             project.setDependencies(toFileCollection(classPath));
@@ -96,9 +97,10 @@ public abstract class AbstractScrProcessor {
             // https://issues.apache.org/jira/browse/FELIX-4192
             // SCR Generator fails with a NPE in case a class level Reference doesn't define a referenceInterface
             getLogger().error("[" + getModuleName() + "] ScrProcessing Failed: Please make sure that all class level references have a referenceInterface defined. Check general component validity. ", e);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             getLogger().error("[" + getModuleName() + "] ScrProcessing Failed: " + e.getMessage(), e);
         }
+
         return false;
     }
 
@@ -245,7 +247,7 @@ public abstract class AbstractScrProcessor {
             urls[i] = new File(list.get(i)).toURI().toURL();
         }
 
-        return new URLClassLoader(urls, this.getClass().getClassLoader());
+        return new ChildFirstURLClassLoader(urls, this.getClass().getClassLoader());
     }
 
     protected abstract void collectClasspath(Collection<String> classPath);
