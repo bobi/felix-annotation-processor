@@ -64,9 +64,7 @@ public abstract class AbstractScrProcessor {
 
             Project project = new Project();
 
-            final ClassLoader classLoader = createClassLoader(classPath);
-
-            project.setClassLoader(classLoader);
+            project.setClassLoader(createClassLoader(classPath));
             project.setClassesDirectory(classDir.getAbsolutePath());
             project.setSources(getSources());
             project.setDependencies(toFileCollection(classPath));
