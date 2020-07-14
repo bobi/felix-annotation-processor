@@ -117,6 +117,16 @@ public abstract class AbstractScrProcessor {
             if (jarFilePath.startsWith(OSGI_INF)) {
                 File outputFile = new File(classDir, jarFilePath);
 
+                int dirIndex = jarFilePath.lastIndexOf('/');
+
+                if (dirIndex > 0) {
+                    final String dirPath = jarFilePath.substring(0, dirIndex);
+
+                    File outDir = new File(classDir, dirPath);
+
+                    outDir.mkdirs();
+                }
+
                 try (final FileOutputStream out = new FileOutputStream(outputFile)) {
                     if (logger.isDebugEnabled()) {
                         logger.debug(String.format("Writing: %s", outputFile.getCanonicalPath()));
