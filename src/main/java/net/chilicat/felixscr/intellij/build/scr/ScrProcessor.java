@@ -1,5 +1,8 @@
 package net.chilicat.felixscr.intellij.build.scr;
 
+import java.io.File;
+import java.util.Collection;
+
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.LibraryOrderEntry;
@@ -11,11 +14,10 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import net.chilicat.felixscr.intellij.build.ScrCompiler;
 
-import java.io.File;
-import java.util.Collection;
-
 public class ScrProcessor extends AbstractScrProcessor {
+
     private final CompileContext context;
+
     private final Module module;
 
     public ScrProcessor(CompileContext context, Module module) {
@@ -40,8 +42,9 @@ public class ScrProcessor extends AbstractScrProcessor {
     @Override
     protected File getClassOutDir() {
         VirtualFile moduleOutputDirectory = context.getModuleOutputDirectory(module);
-        if (moduleOutputDirectory != null)
+        if (moduleOutputDirectory != null) {
             return VfsUtil.virtualToIoFile(moduleOutputDirectory);
+        }
         return null;
     }
 
@@ -49,7 +52,6 @@ public class ScrProcessor extends AbstractScrProcessor {
     protected String getModuleName() {
         return module.getName();
     }
-
 
     @Override
     protected void collectClasspath(Collection<String> classPath) {
@@ -66,7 +68,19 @@ public class ScrProcessor extends AbstractScrProcessor {
                     if (lib != null) {
                         final VirtualFile[] files = lib.getFiles(OrderRootType.CLASSES);
                         for (VirtualFile f : files) {
-                            classPath.add(VfsUtil.virtualToIoFile(f).getAbsolutePath());
+                            final String absolutePath = VfsUtil.virtualToIoFile(f).getAbsolutePath();
+
+                            if (getLogger().isDebugEnabled()) {
+                                getLogger().debug(
+                                    String.format(
+                                        "Add to classpath: %s, from lib %s",
+                                        absolutePath,
+                                        lib.getName()
+                                    )
+                                );
+                            }
+
+                            classPath.add(absolutePath);
                         }
                     }
                 }

@@ -48,6 +48,9 @@ public class ScrProcessor extends AbstractScrProcessor {
         for (File f : classes.getRoots()) {
             // filter out non-Java classpath entries, because Felix fails processing them
             if (f.getName().endsWith(".class") || f.getName().endsWith(".jar") || f.isDirectory()) {
+
+                getLogger().debug(String.format("Add to classpath: %s", f.getAbsolutePath()));
+
                 classPath.add(f.getAbsolutePath());
             }
         }

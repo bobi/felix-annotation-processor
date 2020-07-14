@@ -1,6 +1,5 @@
 package net.chilicat.felixscr.intellij.jps;
 
-import net.chilicat.felixscr.intellij.settings.ManifestPolicy;
 import net.chilicat.felixscr.intellij.settings.ScrSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsElementChildRole;
@@ -61,14 +60,6 @@ public class Settings extends JpsElementBase<Settings> implements ScrSettings {
         state.optimizedBuild = optimizedBuild;
     }
 
-    public boolean isScanClasses() {
-        return state.scanClasses;
-    }
-
-    public void setScanClasses(boolean scanClasses) {
-        state.scanClasses = scanClasses;
-    }
-
     public String getSpec() {
         return state.spec;
     }
@@ -77,26 +68,8 @@ public class Settings extends JpsElementBase<Settings> implements ScrSettings {
         state.spec = spec;
     }
 
-
     public boolean isSpec(String spec) {
         return state.spec.equals(spec);
-    }
-
-    public boolean isIncremental() {
-        return state.incremental;
-    }
-
-    public void setIncremental(boolean incremental) {
-        state.incremental = incremental;
-    }
-
-    public void setManifestPolicy(ManifestPolicy policy) {
-        state.manifestPolicy = policy;
-
-    }
-
-    public ManifestPolicy getManifestPolicy() {
-        return state.manifestPolicy;
     }
 
     @NotNull
@@ -116,10 +89,7 @@ public class Settings extends JpsElementBase<Settings> implements ScrSettings {
         public boolean strictMode = true;
         public boolean generateAccessors = true;
         public boolean optimizedBuild = true;
-        public boolean scanClasses = false;
-        public ManifestPolicy manifestPolicy = ManifestPolicy.overwrite;
         public boolean debugLogging = false;
         public String spec = "1.1";
-        public boolean incremental = false;
     }
 }

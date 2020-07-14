@@ -1,4 +1,3 @@
-
 jar.archiveName = 'felix-jps-plugin.jar'
 
 dependencies {

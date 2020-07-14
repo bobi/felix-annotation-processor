@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 public abstract class AbstractScrLogger implements ScrLogger {
 
     private boolean errorPrinted = false;
+
     private final boolean debugLogging;
 
     protected AbstractScrLogger(boolean debugLogging) {
@@ -30,6 +31,7 @@ public abstract class AbstractScrLogger implements ScrLogger {
 
     public void error(String s, String location, int row, int column) {
         errorPrinted = true;
+
         logImpl(Level.ERROR, withModuleName(s, null), null, location, row, column);
     }
 
@@ -39,6 +41,7 @@ public abstract class AbstractScrLogger implements ScrLogger {
 
     public void error(String s, Throwable throwable) {
         errorPrinted = true;
+
         logImpl(Level.ERROR, withModuleName(s, throwable), throwable, null, -1, -1);
     }
 

@@ -18,7 +18,6 @@ public class SettingsPage {
     private JCheckBox generateAccessorsBox;
     private JCheckBox optimizedBuildBox;
     private JCheckBox debugLoggingBox;
-    private JCheckBox incrementalBox;
     private boolean modified = false;
 
     public SettingsPage() {
@@ -38,7 +37,6 @@ public class SettingsPage {
         list.add(specBox);
         list.add(optimizedBuildBox);
         list.add(debugLoggingBox);
-        list.add(incrementalBox);
 
         ModifyUpdateListener l = new ModifyUpdateListener();
         for (ItemSelectable s : list) {
@@ -69,7 +67,6 @@ public class SettingsPage {
         settingsState.setGenerateAccessors(generateAccessorsBox.isSelected());
         settingsState.setOptimizedBuild(optimizedBuildBox.isSelected());
         settingsState.setDebugLogging(debugLoggingBox.isSelected());
-        settingsState.setIncremental(incrementalBox.isSelected());
 
         modified = false;
     }
@@ -81,7 +78,6 @@ public class SettingsPage {
         generateAccessorsBox.setSelected(settingsState.isGenerateAccessors());
         optimizedBuildBox.setSelected(settingsState.isOptimizedBuild());
         debugLoggingBox.setSelected(settingsState.isDebugLogging());
-        incrementalBox.setSelected(settingsState.isIncremental());
         modified = false;
     }
 

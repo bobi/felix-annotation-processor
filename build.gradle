@@ -1,16 +1,15 @@
 plugins {
-    id "org.jetbrains.intellij" version "0.1.10"
+    id "java"
+    id "org.jetbrains.intellij" version "0.4.21"
 }
-
 
 allprojects {
     repositories {
         mavenCentral()
-        maven { url 'http://dl.bintray.com/jetbrains/intellij-plugin-service' }
     }
 
-    apply plugin: 'org.jetbrains.intellij'
     apply plugin: 'java'
+    apply plugin: 'org.jetbrains.intellij'
 
     group pluginGroup
     version = pluginVersion
@@ -24,13 +23,15 @@ allprojects {
         alternativeIdePath idePath
     }
 
-    intellij.systemProperties = ['compiler.process.debug.port' : '54795']
-
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
 
         sourceCompatibility = javaVersion
         targetCompatibility = javaTargetVersion
+    }
+
+    runIde {
+        jvmArgs '-Dcompiler.process.debug.port=54795'
     }
 }
 
@@ -39,6 +40,3 @@ dependencies {
     compile project(':jps-plugin')
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.14.1'
-}

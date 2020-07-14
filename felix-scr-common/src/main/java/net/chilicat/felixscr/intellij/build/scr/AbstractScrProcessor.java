@@ -4,24 +4,60 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
-import com.intellij.util.PathUtil;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Resource;
 import net.chilicat.felixscr.intellij.settings.ScrSettings;
-import org.apache.felix.scrplugin.*;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Component;
+import org.apache.felix.scrplugin.bnd.SCRDescriptorBndPlugin;
 
 public abstract class AbstractScrProcessor {
 
+    public static final String OSGI_INF = "OSGI-INF";
+
     private ScrSettings settings;
+
     private ScrLogger logger;
 
-    public AbstractScrProcessor() {
 
+    private static class ReportingBuilder extends Builder {
+
+        private final ScrLogger logger;
+
+        private ReportingBuilder(final ScrLogger logger) {
+            super();
+
+            this.logger = logger;
+        }
+
+        @Override
+        public SetLocation error(final String string, final Object... args) {
+            final SetLocation setLocation = super.error(string, args);
+
+            final Location location = setLocation.location();
+
+            logger.error(location.message, location.file, location.line);
+
+            return setLocation;
+        }
+
+        @Override
+        public SetLocation warning(final String string, final Object... args) {
+            final SetLocation setLocation = super.warning(string, args);
+
+            final Location location = setLocation.location();
+
+            logger.warn(location.message, location.file, location.line);
+
+            return setLocation;
+        }
+    }
+
+    public AbstractScrProcessor() {
     }
 
     public void setLogger(ScrLogger logger) {
@@ -37,78 +73,137 @@ public abstract class AbstractScrProcessor {
     }
 
     public boolean execute() {
-        try {
-            final File classDir = this.getClassOutDir();
-            if (classDir == null) {
-                getLogger().error("Compiler Output path must be set for: " + getModuleName(), null, -1, -1);
-                return false;
-            }
+        final File classDir = this.getClassOutDir();
+
+        if (classDir == null) {
+            getLogger().error("Compiler Output path must be set for: " + getModuleName(), null, -1, -1);
+
+            return false;
+        }
+
+        try (final Builder builder = new ReportingBuilder(logger)) {
+            builder.setTrace(logger.isDebugEnabled());
 
             logger.debug("Class dir: " + classDir.getPath());
 
             deleteServiceComponentXMLFiles(classDir, logger);
 
-            final Collection<String> classPath = new LinkedHashSet<String>();
-            classPath.add(classDir.getPath());
-            classPath.add(PathUtil.getJarPathForClass(Component.class));
-            classPath.add(PathUtil.getJarPathForClass(BundleContext.class));
-            collectClasspath(classPath);
+            builder.setBase(classDir);
+            builder.setJar(classDir);
+            builder.setProperties(buildProprties(classDir));
+            builder.setClasspath(buildClasspath(classDir));
 
-            Options opt = new Options();
-            opt.setGenerateAccessors(settings.isGenerateAccessors());
-            opt.setSpecVersion(SpecVersion.fromName(settings.getSpec()));
-            opt.setStrictMode(settings.isStrictMode());
-            opt.setProperties(new HashMap<String, String>());
-            opt.setOutputDirectory(classDir);
-            opt.setIncremental(settings.isIncremental());
+            try (final Jar jar = builder.build()) {
+                writeGeneratedResources(jar, classDir);
 
-            Project project = new Project();
+                updateManifest(jar);
 
-            project.setClassLoader(createClassLoader(classPath));
-            project.setClassesDirectory(classDir.getAbsolutePath());
-            project.setSources(getSources());
-            project.setDependencies(toFileCollection(classPath));
-
-            SCRDescriptorGenerator gen = new SCRDescriptorGenerator(logger);
-            gen.setOptions(opt);
-            gen.setProject(project);
-
-            Result result = gen.execute();
-            if (result.getScrFiles() != null) {
-                updateManifest(result, logger);
+                logger.debug(String.format("Built: %s", jar.getName()));
             }
 
             return !logger.isErrorPrinted();
-
-        } catch (SCRDescriptorFailureException e) {
-            if (e.getMessage().equals("No annotation processors found in classpath.")) {
-                logger.info(e.getMessage());
-                return true;
-            } else {
-                logger.error(e.getMessage(), e);
-            }
-        } catch (SCRDescriptorException e) {
-            logger.error(e.getMessage(), e.getSourceLocation(), 0);
-        } catch (MalformedURLException e) {
-            logger.error(e.getMessage(), e);
-        } catch (NullPointerException e) {
-            // https://issues.apache.org/jira/browse/FELIX-4192
-            // SCR Generator fails with a NPE in case a class level Reference doesn't define a referenceInterface
-            getLogger().error("[" + getModuleName() + "] ScrProcessing Failed: Please make sure that all class level references have a referenceInterface defined. Check general component validity. ", e);
         } catch (Exception e) {
-            getLogger().error("[" + getModuleName() + "] ScrProcessing Failed: " + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
+
         }
 
         return false;
     }
 
-    private void deleteServiceComponentXMLFiles(File classDir, ScrLogger logger) {
+    private void writeGeneratedResources(final Jar jar, final File classDir) {
+        for (Map.Entry<String, Resource> entry : jar.getResources().entrySet()) {
+            final String jarFilePath = entry.getKey();
 
+            if (jarFilePath.startsWith(OSGI_INF)) {
+                File outputFile = new File(classDir, jarFilePath);
+
+                try (final FileOutputStream out = new FileOutputStream(outputFile)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(String.format("Writing: %s", outputFile.getCanonicalPath()));
+                    }
+                    entry.getValue().write(out);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    private Properties buildProprties(final File classDir) throws IOException {
+        Properties properties = new Properties();
+
+        properties.put(Analyzer.BUNDLE_SYMBOLICNAME, getModuleName());
+        properties.put(Analyzer.DSANNOTATIONS, "*");
+        properties.put(Analyzer.METATYPE_ANNOTATIONS, "*");
+        properties.put(Analyzer.IMPORT_PACKAGE, "*");
+
+
+        final Map<String, String> felixScrPluginOptions = new LinkedHashMap<>();
+
+        felixScrPluginOptions.put("strictMode", Boolean.toString(settings.isStrictMode()));
+        felixScrPluginOptions.put("generateAccessors", Boolean.toString(settings.isGenerateAccessors()));
+        felixScrPluginOptions.put("specVersion", settings.getSpec());
+        felixScrPluginOptions.put("log", settings.isDebugLogging() ? "Debug" : "Warn");
+        felixScrPluginOptions.put("destdir", classDir.getCanonicalPath());
+
+        header(
+            properties,
+            Analyzer.PLUGIN,
+            String.format("%s;%s", SCRDescriptorBndPlugin.class.getName(), pluginOptions(felixScrPluginOptions))
+        );
+
+        return properties;
+    }
+
+    private List<Jar> buildClasspath(final File classDir) throws IOException {
+        List<Jar> classpath = new ArrayList<>();
+
+        if (classDir.isDirectory()) {
+            classpath.add(new Jar(getModuleName(), classDir));
+        }
+
+        final Collection<String> projectClassPath = new LinkedHashSet<String>();
+
+        collectClasspath(projectClassPath);
+
+        for (String path : projectClassPath) {
+            File cpe = new File(path);
+
+            if (cpe.exists()) {
+                classpath.add(new Jar(cpe));
+            } else {
+                logger.warn(String.format("Path %s does not exist", cpe.getCanonicalPath()));
+            }
+        }
+
+        return classpath;
+    }
+
+    private static void header(Properties properties, String key, Object value) {
+        if (value == null) {
+            return;
+        }
+
+        if (value instanceof Collection && ((Collection<?>) value).isEmpty()) {
+            return;
+        }
+
+        properties.put(key, value.toString().replaceAll("[\r\n]", ""));
+    }
+
+    private static String pluginOptions(Map<String, String> options) {
+        return options.entrySet()
+            .stream()
+            .map(e -> e.getKey() + "=" + e.getValue())
+            .collect(Collectors.joining(";"));
+    }
+
+    private void deleteServiceComponentXMLFiles(File classDir, ScrLogger logger) {
         final Set<String> nonDelete = collectNonDeletes();
 
         logger.debug("Preserve files: " + Arrays.toString(nonDelete.toArray()));
 
-        File xmlDir = new File(classDir, "OSGI-INF");
+        File xmlDir = new File(classDir, OSGI_INF);
 
         logger.debug("OSGI-INF exists: " + xmlDir.exists() + " Is dir: " + xmlDir.isDirectory());
 
@@ -156,40 +251,15 @@ public abstract class AbstractScrProcessor {
         return nonDelete;
     }
 
-    private Collection<Source> getSources() {
-        final Collection<Source> sources;
-        File out = getClassOutDir();
-        if (out != null) {
-            sources = ScrSource.toSourcesCollection(new File[]{out}, ".class");
-        } else {
-            sources = Collections.emptyList();
-        }
-        return sources;
-    }
-
-    protected abstract File[] getModuleSourceRoots();
-
-    protected abstract File getClassOutDir();
-
-    private Collection<File> toFileCollection(Collection<String> classPath) {
-        Collection<File> files = new ArrayList<File>(classPath.size());
-        boolean first = true;
-        for (String a : classPath) {
-            if (!first) {
-                files.add(new File(a));
-            }
-            first = false;
-        }
-        return files;
-    }
-
-    private void updateManifest(Result result, ScrLogger logger) {
+    private void updateManifest(final Jar jar) {
         File manifest = new File(this.getClassOutDir(), "/META-INF/MANIFEST.MF");
 
-        logger.debug("Update Manifest, Has manifest: " + manifest.exists() + " SCR Comps: " + !result.getScrFiles().isEmpty());
+        boolean hasScrFiles = jar.getResources(s -> s.matches(OSGI_INF + "/.*\\.xml")).findAny().isPresent();
 
-        if (manifest.exists() && !result.getScrFiles().isEmpty()) {
-            final String componentLine = "OSGI-INF/*.xml";
+        logger.debug("Update Manifest, Has manifest: " + manifest.exists() + ", SCR Comps: " + hasScrFiles);
+
+        if (manifest.exists() && hasScrFiles) {
+            final String componentLine = OSGI_INF + "/*.xml";
 
             try {
                 FileInputStream in = new FileInputStream(manifest);
@@ -217,36 +287,11 @@ public abstract class AbstractScrProcessor {
         }
     }
 
+    protected abstract File[] getModuleSourceRoots();
+
+    protected abstract File getClassOutDir();
+
     protected abstract String getModuleName();
-
-    private String addServiceComponentTo(String value, String serviceComponentXml) {
-        String[] values = value.split(",");
-        Set<String> all = new HashSet<String>();
-        for (String v : values) {
-            all.add(v.trim());
-        }
-        all.add(serviceComponentXml);
-
-        StringBuilder finalValue = new StringBuilder();
-        for (String a : all) {
-            if (finalValue.length() > 0) {
-                finalValue.append(",");
-            }
-            finalValue.append(a);
-        }
-        return finalValue.toString();
-    }
-
-    private ClassLoader createClassLoader(Collection<String> classPath) throws MalformedURLException {
-        final URL[] urls = new URL[classPath.size()];
-        final List<String> list = new ArrayList<String>(classPath);
-
-        for (int i = 0; i < classPath.size(); i++) {
-            urls[i] = new File(list.get(i)).toURI().toURL();
-        }
-
-        return new ChildFirstURLClassLoader(urls, this.getClass().getClassLoader());
-    }
 
     protected abstract void collectClasspath(Collection<String> classPath);
 }

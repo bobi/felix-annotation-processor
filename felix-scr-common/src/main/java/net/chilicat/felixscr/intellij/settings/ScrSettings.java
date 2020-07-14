@@ -30,9 +30,4 @@ public interface ScrSettings {
     void setDebugLogging(boolean debug);
 
     boolean isDebugLogging();
-
-    boolean isIncremental();
-
-    void setIncremental(boolean incremental);
-
 }
